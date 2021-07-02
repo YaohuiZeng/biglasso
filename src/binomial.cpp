@@ -259,13 +259,13 @@ RcppExport SEXP cdfit_binomial_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
+  double *a = R_Calloc(p, double); //Beta from previous iteration
   double a0 = 0.0; //beta0 from previousiteration
-  double *w = Calloc(n, double);
-  double *s = Calloc(n, double); //y_i - pi_i
-  double *eta = Calloc(n, double);
-  int *e1 = Calloc(p, int); //ever-active set
-  int *e2 = Calloc(p, int); //strong set
+  double *w = R_Calloc(n, double);
+  double *s = R_Calloc(n, double); //y_i - pi_i
+  double *eta = R_Calloc(n, double);
+  int *e1 = R_Calloc(p, int); //ever-active set
+  int *e2 = R_Calloc(p, int); //strong set
   double xwr, xwx, pi, u, v, cutoff, l1, l2, shift, si;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, l, violations, lstart;
@@ -273,7 +273,7 @@ RcppExport SEXP cdfit_binomial_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
   double ybar = sum(y, n) / n;
   a0 = beta0[0] = log(ybar / (1-ybar));
   double nullDev = 0;
-  double *r = Calloc(n, double);
+  double *r = R_Calloc(n, double);
   for (i = 0; i < n; i++) {
     r[i] = y[i];
     nullDev = nullDev - y[i]*log(ybar) - (1-y[i])*log(1-ybar);
@@ -328,7 +328,7 @@ RcppExport SEXP cdfit_binomial_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
         return List::create(beta0, beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
       }
@@ -385,7 +385,7 @@ RcppExport SEXP cdfit_binomial_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
           if (Dev[l] / nullDev < .01) {
             if (warn) warning("Model saturated; exiting...");
             for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-            Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+            R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
             return List::create(beta0, beta, center, scale, lambda, Dev,
                                 iter, n_reject, Rcpp::wrap(col_idx));
           }
@@ -441,7 +441,7 @@ RcppExport SEXP cdfit_binomial_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
       if (violations==0) break;
     }
   }
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
   return List::create(beta0, beta, center, scale, lambda, Dev, iter, n_reject, Rcpp::wrap(col_idx));
   
 }
@@ -518,13 +518,13 @@ RcppExport SEXP cdfit_binomial_ssr_approx(SEXP X_, SEXP y_, SEXP row_idx_,
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
+  double *a = R_Calloc(p, double); //Beta from previous iteration
   double a0 = 0.0; //beta0 from previousiteration
-  double *w = Calloc(n, double);
-  double *s = Calloc(n, double); //y_i - pi_i
-  double *eta = Calloc(n, double);
-  int *e1 = Calloc(p, int); //ever-active set
-  int *e2 = Calloc(p, int); //strong set
+  double *w = R_Calloc(n, double);
+  double *s = R_Calloc(n, double); //y_i - pi_i
+  double *eta = R_Calloc(n, double);
+  int *e1 = R_Calloc(p, int); //ever-active set
+  int *e2 = R_Calloc(p, int); //strong set
   double xwr, xwx, pi, u, v, cutoff, l1, l2, shift, si;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, l, violations, lstart; // temp index
@@ -532,7 +532,7 @@ RcppExport SEXP cdfit_binomial_ssr_approx(SEXP X_, SEXP y_, SEXP row_idx_,
   double ybar = sum(y, n)/n;
   a0 = beta0[0] = log(ybar/(1-ybar));
   double nullDev = 0;
-  double *r = Calloc(n, double);
+  double *r = R_Calloc(n, double);
   for (i = 0; i < n; i++) {
     r[i] = y[i];
     nullDev = nullDev - y[i] * log(ybar) - (1 - y[i]) * log(1 - ybar);
@@ -580,7 +580,7 @@ RcppExport SEXP cdfit_binomial_ssr_approx(SEXP X_, SEXP y_, SEXP row_idx_,
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
         return List::create(beta0, beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
       }
@@ -634,7 +634,7 @@ RcppExport SEXP cdfit_binomial_ssr_approx(SEXP X_, SEXP y_, SEXP row_idx_,
           if (Dev[l] / nullDev < .01) {
             if (warn) warning("Model saturated; exiting...");
             for (int ll = l; ll < L; ll++) iter[ll] = NA_INTEGER;
-            Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+            R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
             return List::create(beta0, beta, center, scale, lambda, Dev, 
                                 iter, n_reject, Rcpp::wrap(col_idx));
           }
@@ -696,7 +696,7 @@ RcppExport SEXP cdfit_binomial_ssr_approx(SEXP X_, SEXP y_, SEXP row_idx_,
     }
   }
   
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
   return List::create(beta0, beta, center, scale, lambda, Dev, iter, n_reject, Rcpp::wrap(col_idx));
 }
 
@@ -778,13 +778,13 @@ RcppExport SEXP cdfit_binomial_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEXP yl
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
+  double *a = R_Calloc(p, double); //Beta from previous iteration
   double a0 = 0.0; //beta0 from previousiteration
-  double *w = Calloc(n, double);
-  double *s = Calloc(n, double); //y_i - pi_i
-  double *eta = Calloc(n, double);
-  int *e1 = Calloc(p, int); //ever-active set
-  int *e2 = Calloc(p, int); //strong set
+  double *w = R_Calloc(n, double);
+  double *s = R_Calloc(n, double); //y_i - pi_i
+  double *eta = R_Calloc(n, double);
+  int *e1 = R_Calloc(p, int); //ever-active set
+  int *e2 = R_Calloc(p, int); //strong set
   double xwr, xwx, pi, u, v, cutoff, l1, l2, shift, si;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, l, violations, lstart;
@@ -792,7 +792,7 @@ RcppExport SEXP cdfit_binomial_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEXP yl
   double ybar = sum(y, n) / n;
   a0 = beta0[0] = log(ybar / (1-ybar));
   double nullDev = 0;
-  double *r = Calloc(n, double);
+  double *r = R_Calloc(n, double);
   for (i = 0; i < n; i++) {
     r[i] = y[i];
     nullDev = nullDev - y[i]*log(ybar) - (1-y[i])*log(1-ybar);
@@ -836,8 +836,8 @@ RcppExport SEXP cdfit_binomial_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEXP yl
   vector<double> X_theta_lam_xi_pos; 
   vector<double> prod_PX_Pxmax_xi_pos;
   vector<double> cutoff_xi_pos;
-  int *slores_reject = Calloc(p, int);
-  int *slores_reject_old = Calloc(p, int);
+  int *slores_reject = R_Calloc(p, int);
+  int *slores_reject_old = R_Calloc(p, int);
   for (int j = 0; j < p; j++) slores_reject_old[j] = 1;
   
   int slores; // if 0, don't perform Slores rule
@@ -877,8 +877,8 @@ RcppExport SEXP cdfit_binomial_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEXP yl
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(slores_reject); Free(slores_reject_old);
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+        R_Free(slores_reject); R_Free(slores_reject_old);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
         //ProfilerStop();
         return List::create(beta0, beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
@@ -952,8 +952,8 @@ RcppExport SEXP cdfit_binomial_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEXP yl
           if (Dev[l] / nullDev < .01) {
             if (warn) warning("Model saturated; exiting...");
             for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-            Free(slores_reject); Free(slores_reject_old);
-            Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+            R_Free(slores_reject); R_Free(slores_reject_old);
+            R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
             return List::create(beta0, beta, center, scale, lambda, Dev, iter, n_reject, n_slores_reject, Rcpp::wrap(col_idx));
           }
           // Intercept
@@ -1012,8 +1012,8 @@ RcppExport SEXP cdfit_binomial_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEXP yl
       }
     }
   }
-  Free(slores_reject); Free(slores_reject_old);
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+  R_Free(slores_reject); R_Free(slores_reject_old);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
   //ProfilerStop();
   return List::create(beta0, beta, center, scale, lambda, Dev, iter, n_reject, n_slores_reject, Rcpp::wrap(col_idx));
 }
@@ -1097,13 +1097,13 @@ RcppExport SEXP cdfit_binomial_ada_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEX
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
+  double *a = R_Calloc(p, double); //Beta from previous iteration
   double a0 = 0.0; //beta0 from previousiteration
-  double *w = Calloc(n, double);
-  double *s = Calloc(n, double); //y_i - pi_i
-  double *eta = Calloc(n, double);
-  int *e1 = Calloc(p, int); //ever-active set
-  int *e2 = Calloc(p, int); //strong set
+  double *w = R_Calloc(n, double);
+  double *s = R_Calloc(n, double); //y_i - pi_i
+  double *eta = R_Calloc(n, double);
+  int *e1 = R_Calloc(p, int); //ever-active set
+  int *e2 = R_Calloc(p, int); //strong set
   double xwr, xwx, pi, u, v, cutoff, l1, l2, shift, si;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, l, violations, lstart;
@@ -1111,7 +1111,7 @@ RcppExport SEXP cdfit_binomial_ada_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEX
   double ybar = sum(y, n) / n;
   a0 = beta0[0] = log(ybar / (1-ybar));
   double nullDev = 0;
-  double *r = Calloc(n, double);
+  double *r = R_Calloc(n, double);
   for (i = 0; i < n; i++) {
     r[i] = y[i];
     nullDev = nullDev - y[i]*log(ybar) - (1-y[i])*log(1-ybar);
@@ -1155,8 +1155,8 @@ RcppExport SEXP cdfit_binomial_ada_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEX
   vector<double> X_theta_lam_xi_pos; 
   vector<double> prod_PX_Pxmax_xi_pos;
   vector<double> cutoff_xi_pos;
-  int *slores_reject = Calloc(p, int);
-  int *slores_reject_old = Calloc(p, int);
+  int *slores_reject = R_Calloc(p, int);
+  int *slores_reject_old = R_Calloc(p, int);
   for (int j = 0; j < p; j++) slores_reject_old[j] = 1;
   int l_prev = lstart;
   double gain = 0.0;
@@ -1201,8 +1201,8 @@ RcppExport SEXP cdfit_binomial_ada_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEX
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(slores_reject); Free(slores_reject_old);
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+        R_Free(slores_reject); R_Free(slores_reject_old);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
         //ProfilerStop();
         return List::create(beta0, beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
@@ -1301,8 +1301,8 @@ RcppExport SEXP cdfit_binomial_ada_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEX
           if (Dev[l] / nullDev < .01) {
             if (warn) warning("Model saturated; exiting...");
             for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-            Free(slores_reject); Free(slores_reject_old);
-            Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+            R_Free(slores_reject); R_Free(slores_reject_old);
+            R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
             return List::create(beta0, beta, center, scale, lambda, Dev, iter, n_reject, n_slores_reject, Rcpp::wrap(col_idx));
           }
           // Intercept
@@ -1373,8 +1373,8 @@ RcppExport SEXP cdfit_binomial_ada_slores_ssr(SEXP X_, SEXP y_, SEXP n_pos_, SEX
        }*/
     }
   }
-  Free(slores_reject); Free(slores_reject_old);
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta);
+  R_Free(slores_reject); R_Free(slores_reject_old);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta);
   //ProfilerStop();
   return List::create(beta0, beta, center, scale, lambda, Dev, iter, n_reject, n_slores_reject, Rcpp::wrap(col_idx));
 }

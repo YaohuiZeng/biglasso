@@ -13,8 +13,8 @@ void standardize_and_get_residual_cox(NumericVector &center, NumericVector &scal
   double sum_xs;
   double zmax = 0.0, zj = 0.0;
   int i, j, k;
-  double *s = Calloc(n, double);
-  double *rsk = Calloc(f, double);
+  double *s = R_Calloc(n, double);
+  double *rsk = R_Calloc(f, double);
   
   rsk[0] = n;
   k = 0;
@@ -61,8 +61,8 @@ void standardize_and_get_residual_cox(NumericVector &center, NumericVector &scal
   }
   *p_keep_ptr = col_idx.size();
   *lambda_max_ptr = zmax / alpha;
-  Free(s);
-  Free(rsk);
+  R_Free(s);
+  R_Free(rsk);
 }
 
 // SAFE initialization
@@ -115,7 +115,7 @@ double dual_cox(double *haz, double *rsk, double lambda, double lambda_0,
                 int n, int f, double *y, double *d, int *d_idx) {
   double res = 0.0;
   double lam_ratio = lambda / lambda_0;
-  double *hlogh = Calloc(f, double);
+  double *hlogh = R_Calloc(f, double);
   int i, k;
   hlogh[f-1] = 0.0;
   k = f-1;
@@ -139,7 +139,7 @@ double dual_cox(double *haz, double *rsk, double lambda, double lambda_0,
         lam_ratio * d[k] * haz[i] / rsk[k] * log(lam_ratio * haz[i] / rsk[k]);
     } 
   }
-  Free(hlogh);
+  R_Free(hlogh);
   return res;
 }
 
@@ -212,8 +212,8 @@ void scox_update(vector<double>& X_theta_lam, vector<double>& z, double *eta,
     rsk0[k] += haz0[i];
   }
   
-  double *w = Calloc(n, double);
-  double *s = Calloc(n, double);
+  double *w = R_Calloc(n, double);
+  double *s = R_Calloc(n, double);
 
   //Rprintf("Old g = %f\n", dual_cox(haz0, rsk0, 1.0, 1.0, n, f, y, d, d_idx));
   //Rprintf("New g = %f\n", dual_cox(haz, rsk, 1.0, 1.0, n, f, y, d, d_idx));
@@ -262,7 +262,7 @@ void scox_update(vector<double>& X_theta_lam, vector<double>& z, double *eta,
     z[j] = sum_xs / (scale[jj] * n);
     X_theta_lam[j] = -z[j];
   }  
-  Free(s); Free(w);
+  R_Free(s); R_Free(w);
 
 }
 
@@ -275,11 +275,11 @@ void scox_updater(double *g_theta_lam_ptr, double *eta, double lambda, double l,
                   double alpha, double *a, arma::sp_mat& beta) {
   
   int i, j, jj, k;
-  double *haz = Calloc(n, double);
-  double *rsk = Calloc(f, double);
-  double *w = Calloc(n, double);
-  double *s = Calloc(n, double);
-  double *r = Calloc(n, double);
+  double *haz = R_Calloc(n, double);
+  double *rsk = R_Calloc(f, double);
+  double *w = R_Calloc(n, double);
+  double *s = R_Calloc(n, double);
+  double *r = R_Calloc(n, double);
   int iter = 0;
   double sumWResid, xwr, xwx, u, v, l1, l2, shift, update, max_update;
   
@@ -346,7 +346,7 @@ void scox_updater(double *g_theta_lam_ptr, double *eta, double lambda, double l,
   }
   
   *g_theta_lam_ptr = dual_cox(haz, rsk, 1.0, 1.0, n, f, y, d, d_idx);
-  Free(haz); Free(rsk); Free(r); Free(s); Free(w);
+  R_Free(haz); R_Free(rsk); R_Free(r); R_Free(s); R_Free(w);
   
 }
 
@@ -504,14 +504,14 @@ RcppExport SEXP cdfit_cox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_idx_,
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
-  double *w = Calloc(n, double); //weights from diagnal of hessian matrix
-  double *s = Calloc(n, double); //y_i - yhat_i
-  double *r = Calloc(n, double); //s/w
-  double *eta = Calloc(n, double); //X\beta
-  double *haz = Calloc(n, double); //exp(eta)
-  double *rsk = Calloc(f, double); //Sum of hazard over at risk set
-  int *e1 = Calloc(p, int); //ever-active set
+  double *a = R_Calloc(p, double); //Beta from previous iteration
+  double *w = R_Calloc(n, double); //weights from diagnal of hessian matrix
+  double *s = R_Calloc(n, double); //y_i - yhat_i
+  double *r = R_Calloc(n, double); //s/w
+  double *eta = R_Calloc(n, double); //X\beta
+  double *haz = R_Calloc(n, double); //exp(eta)
+  double *rsk = R_Calloc(f, double); //Sum of hazard over at risk set
+  int *e1 = R_Calloc(p, int); //ever-active set
   double xwr, xwx, u, v, l1, l2, shift;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, k, l, violations, lstart;
@@ -581,7 +581,7 @@ RcppExport SEXP cdfit_cox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_idx_,
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(eta); Free(haz); Free(rsk);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(eta); R_Free(haz); R_Free(rsk);
         return List::create(beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
       }
@@ -612,7 +612,7 @@ RcppExport SEXP cdfit_cox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_idx_,
         if (Dev[l] / nullDev < .01) {
           if (warn) warning("Model saturated with deviance %f; exiting...", Dev[l]);
           for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-          Free(s); Free(w); Free(a); Free(r); Free(e1); Free(eta); Free(haz); Free(rsk);
+          R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(eta); R_Free(haz); R_Free(rsk);
           return List::create(beta, center, scale, lambda, Dev,
                               iter, n_reject, Rcpp::wrap(col_idx));
         }
@@ -667,7 +667,7 @@ RcppExport SEXP cdfit_cox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_idx_,
       if (violations==0) break;
     }
   }
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(eta); Free(haz); Free(rsk);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(eta); R_Free(haz); R_Free(rsk);
   return List::create(beta, center, scale, lambda, Dev, iter, n_reject, Rcpp::wrap(col_idx));
   
 }
@@ -745,15 +745,15 @@ RcppExport SEXP cdfit_cox_ssr(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_i
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
-  double *w = Calloc(n, double); //weights from diagnal of hessian matrix
-  double *s = Calloc(n, double); //y_i - yhat_i
-  double *r = Calloc(n, double); //s/w
-  double *eta = Calloc(n, double); //X\beta
-  double *haz = Calloc(n, double); //exp(eta)
-  double *rsk = Calloc(f, double); //Sum of hazard over at risk set
-  int *e1 = Calloc(p, int); //ever-active set
-  int *e2 = Calloc(p, int); //strong set
+  double *a = R_Calloc(p, double); //Beta from previous iteration
+  double *w = R_Calloc(n, double); //weights from diagnal of hessian matrix
+  double *s = R_Calloc(n, double); //y_i - yhat_i
+  double *r = R_Calloc(n, double); //s/w
+  double *eta = R_Calloc(n, double); //X\beta
+  double *haz = R_Calloc(n, double); //exp(eta)
+  double *rsk = R_Calloc(f, double); //Sum of hazard over at risk set
+  int *e1 = R_Calloc(p, int); //ever-active set
+  int *e2 = R_Calloc(p, int); //strong set
   double xwr, xwx, u, v, cutoff, l1, l2, shift;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, k, l, violations, lstart;
@@ -824,7 +824,7 @@ RcppExport SEXP cdfit_cox_ssr(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_i
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta); Free(haz); Free(rsk);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta); R_Free(haz); R_Free(rsk);
         return List::create(beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
       }
@@ -878,7 +878,7 @@ RcppExport SEXP cdfit_cox_ssr(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_i
           if (Dev[l] / nullDev < .01) {
             if (warn) warning("Model saturated with deviance %f; exiting...", Dev[l]);
             for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-            Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta); Free(haz); Free(rsk);
+            R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta); R_Free(haz); R_Free(rsk);
             return List::create(beta, center, scale, lambda, Dev,
                                 iter, n_reject, Rcpp::wrap(col_idx));
           }
@@ -937,7 +937,7 @@ RcppExport SEXP cdfit_cox_ssr(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_i
       if (violations==0) break;
     }
   }
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(eta); Free(haz); Free(rsk);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(eta); R_Free(haz); R_Free(rsk);
   return List::create(beta, center, scale, lambda, Dev, iter, n_reject, Rcpp::wrap(col_idx));
   
 }
@@ -1016,14 +1016,14 @@ RcppExport SEXP cdfit_cox_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
-  double *w = Calloc(n, double); //weights from diagnal of hessian matrix
-  double *s = Calloc(n, double); //y_i - yhat_i
-  double *r = Calloc(n, double); //s/w
-  double *eta = Calloc(n, double); //X\beta
-  double *haz = Calloc(n, double); //exp(eta)
-  double *rsk = Calloc(f, double); //Sum of hazard over at risk set
-  int *e1 = Calloc(p, int); //ever-active set
+  double *a = R_Calloc(p, double); //Beta from previous iteration
+  double *w = R_Calloc(n, double); //weights from diagnal of hessian matrix
+  double *s = R_Calloc(n, double); //y_i - yhat_i
+  double *r = R_Calloc(n, double); //s/w
+  double *eta = R_Calloc(n, double); //X\beta
+  double *haz = R_Calloc(n, double); //exp(eta)
+  double *rsk = R_Calloc(f, double); //Sum of hazard over at risk set
+  int *e1 = R_Calloc(p, int); //ever-active set
   double xwr, xwx, u, v, cutoff, l1, l2, shift;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, k, l, violations, lstart;
@@ -1083,9 +1083,9 @@ RcppExport SEXP cdfit_cox_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
   double *g_theta_lam_ptr = &g_theta_lam;
   vector<double> X_theta_lam; 
   vector<double> scaleP_X;
-  int *safe_reject = Calloc(p, int);
-  double *haz0 = Calloc(n, double);
-  double *rsk0 = Calloc(f, double);
+  int *safe_reject = R_Calloc(p, int);
+  double *haz0 = R_Calloc(n, double);
+  double *rsk0 = R_Calloc(f, double);
   
   int scox; // if 0, don't perform Scox rule
   if (safe_thresh < 1) {
@@ -1122,7 +1122,7 @@ RcppExport SEXP cdfit_cox_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
         return List::create(beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
       }
@@ -1159,7 +1159,7 @@ RcppExport SEXP cdfit_cox_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
         if (Dev[l] / nullDev < .01) {
           if (warn) warning("Model saturated with deviance %f; exiting...", Dev[l]);
           for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-          Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+          R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
           return List::create(beta, center, scale, lambda, Dev,
                               iter, n_reject, Rcpp::wrap(col_idx));
         }
@@ -1214,7 +1214,7 @@ RcppExport SEXP cdfit_cox_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
       if (violations==0) break;
     }
   }
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
   return List::create(beta, center, scale, lambda, Dev, iter, n_reject, Rcpp::wrap(col_idx));
 }
 
@@ -1292,14 +1292,14 @@ RcppExport SEXP cdfit_cox_sscox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
-  double *w = Calloc(n, double); //weights from diagnal of hessian matrix
-  double *s = Calloc(n, double); //y_i - yhat_i
-  double *r = Calloc(n, double); //s/w
-  double *eta = Calloc(n, double); //X\beta
-  double *haz = Calloc(n, double); //exp(eta)
-  double *rsk = Calloc(f, double); //Sum of hazard over at risk set
-  int *e1 = Calloc(p, int); //ever-active set
+  double *a = R_Calloc(p, double); //Beta from previous iteration
+  double *w = R_Calloc(n, double); //weights from diagnal of hessian matrix
+  double *s = R_Calloc(n, double); //y_i - yhat_i
+  double *r = R_Calloc(n, double); //s/w
+  double *eta = R_Calloc(n, double); //X\beta
+  double *haz = R_Calloc(n, double); //exp(eta)
+  double *rsk = R_Calloc(f, double); //Sum of hazard over at risk set
+  int *e1 = R_Calloc(p, int); //ever-active set
   double xwr, xwx, u, v, cutoff, l1, l2, shift;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, k, l, violations, lstart;
@@ -1359,9 +1359,9 @@ RcppExport SEXP cdfit_cox_sscox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row
   double *g_theta_lam_ptr = &g_theta_lam;
   vector<double> X_theta_lam; 
   vector<double> scaleP_X;
-  double *haz0 = Calloc(n, double);
-  double *rsk0 = Calloc(f, double);
-  int *safe_reject = Calloc(p, int);
+  double *haz0 = R_Calloc(n, double);
+  double *rsk0 = R_Calloc(f, double);
+  int *safe_reject = R_Calloc(p, int);
   
 
   int scox; // if 0, don't perform Scox rule
@@ -1399,7 +1399,7 @@ RcppExport SEXP cdfit_cox_sscox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
         return List::create(beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
       }
@@ -1444,7 +1444,7 @@ RcppExport SEXP cdfit_cox_sscox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row
         if (Dev[l] / nullDev < .01) {
           if (warn) warning("Model saturated with deviance %f; exiting...", Dev[l]);
           for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-          Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+          R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
           return List::create(beta, center, scale, lambda, Dev,
                               iter, n_reject, Rcpp::wrap(col_idx));
         }
@@ -1500,7 +1500,7 @@ RcppExport SEXP cdfit_cox_sscox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row
       if (violations==0) break;
     }
   }
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
   return List::create(beta, center, scale, lambda, Dev, iter, n_reject, Rcpp::wrap(col_idx));
 }
 
@@ -1581,15 +1581,15 @@ RcppExport SEXP cdfit_cox_ada_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP 
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
-  double *w = Calloc(n, double); //weights from diagnal of hessian matrix
-  double *s = Calloc(n, double); //y_i - yhat_i
-  double *r = Calloc(n, double); //s/w
-  double *eta = Calloc(n, double); //X\beta
-  double *haz = Calloc(n, double); //exp(eta)
-  double *rsk = Calloc(f, double); //Sum of hazard over at risk set
-  int *e1 = Calloc(p, int); //ever-active set
-  int *e2 = Calloc(p, int); //strong set
+  double *a = R_Calloc(p, double); //Beta from previous iteration
+  double *w = R_Calloc(n, double); //weights from diagnal of hessian matrix
+  double *s = R_Calloc(n, double); //y_i - yhat_i
+  double *r = R_Calloc(n, double); //s/w
+  double *eta = R_Calloc(n, double); //X\beta
+  double *haz = R_Calloc(n, double); //exp(eta)
+  double *rsk = R_Calloc(f, double); //Sum of hazard over at risk set
+  int *e1 = R_Calloc(p, int); //ever-active set
+  int *e2 = R_Calloc(p, int); //strong set
   double xwr, xwx, u, v, cutoff, l1, l2, shift;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, k, l, violations, lstart;
@@ -1650,9 +1650,9 @@ RcppExport SEXP cdfit_cox_ada_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP 
   double *g_theta_lam_ptr = &g_theta_lam;
   vector<double> X_theta_lam; 
   vector<double> scaleP_X;
-  double *haz0 = Calloc(n, double);
-  double *rsk0 = Calloc(f, double);
-  int *safe_reject = Calloc(p, int);
+  double *haz0 = R_Calloc(n, double);
+  double *rsk0 = R_Calloc(f, double);
+  int *safe_reject = R_Calloc(p, int);
   int gain = 0;
   int l_prev = lstart;
   
@@ -1692,7 +1692,7 @@ RcppExport SEXP cdfit_cox_ada_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP 
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
         return List::create(beta, center, scale, lambda, Dev, iter,
                             n_reject, n_safe_reject, Rcpp::wrap(col_idx));
       }
@@ -1763,7 +1763,7 @@ RcppExport SEXP cdfit_cox_ada_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP 
           if (Dev[l] / nullDev < .01) {
             if (warn) warning("Model saturated with deviance %f; exiting...", Dev[l]);
             for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-            Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+            R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
             return List::create(beta, center, scale, lambda, Dev, iter,
                                 n_reject, n_safe_reject, Rcpp::wrap(col_idx));
           }
@@ -1824,7 +1824,7 @@ RcppExport SEXP cdfit_cox_ada_scox(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP 
       if (violations==0) break;
     }
   }
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(e2); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(e2); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
   return List::create(beta, center, scale, lambda, Dev, iter, n_reject, n_safe_reject, Rcpp::wrap(col_idx));
 }
 // Coordinate descent for cox models with SAFE
@@ -1901,14 +1901,14 @@ RcppExport SEXP cdfit_cox_safe(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
   }
   
   arma::sp_mat beta = arma::sp_mat(p, L); //beta
-  double *a = Calloc(p, double); //Beta from previous iteration
-  double *w = Calloc(n, double); //weights from diagnal of hessian matrix
-  double *s = Calloc(n, double); //y_i - yhat_i
-  double *r = Calloc(n, double); //s/w
-  double *eta = Calloc(n, double); //X\beta
-  double *haz = Calloc(n, double); //exp(eta)
-  double *rsk = Calloc(f, double); //Sum of hazard over at risk set
-  int *e1 = Calloc(p, int); //ever-active set
+  double *a = R_Calloc(p, double); //Beta from previous iteration
+  double *w = R_Calloc(n, double); //weights from diagnal of hessian matrix
+  double *s = R_Calloc(n, double); //y_i - yhat_i
+  double *r = R_Calloc(n, double); //s/w
+  double *eta = R_Calloc(n, double); //X\beta
+  double *haz = R_Calloc(n, double); //exp(eta)
+  double *rsk = R_Calloc(f, double); //Sum of hazard over at risk set
+  int *e1 = R_Calloc(p, int); //ever-active set
   double xwr, xwx, u, v, cutoff, l1, l2, shift;
   double max_update, update, thresh; // for convergence check
   int i, j, jj, k, l, violations, lstart;
@@ -1965,7 +1965,7 @@ RcppExport SEXP cdfit_cox_safe(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
   
   // SAFE variables
   vector<double> scale_SAFE_X;
-  int *safe_reject = Calloc(p, int);
+  int *safe_reject = R_Calloc(p, int);
   
   int scox; // if 0, don't perform SAFE rule
   if (safe_thresh < 1) {
@@ -1999,7 +1999,7 @@ RcppExport SEXP cdfit_cox_safe(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+        R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
         return List::create(beta, center, scale, lambda, Dev, 
                             iter, n_reject, Rcpp::wrap(col_idx));
       }
@@ -2034,7 +2034,7 @@ RcppExport SEXP cdfit_cox_safe(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
         if (Dev[l] / nullDev < .01) {
           if (warn) warning("Model saturated with deviance %f; exiting...", Dev[l]);
           for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-          Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+          R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
           return List::create(beta, center, scale, lambda, Dev,
                               iter, n_reject, Rcpp::wrap(col_idx));
         }
@@ -2086,6 +2086,6 @@ RcppExport SEXP cdfit_cox_safe(SEXP X_, SEXP y_, SEXP d_, SEXP d_idx_, SEXP row_
       if (violations==0) break;
     }
   }
-  Free(s); Free(w); Free(a); Free(r); Free(e1); Free(safe_reject); Free(eta); Free(haz); Free(rsk);
+  R_Free(s); R_Free(w); R_Free(a); R_Free(r); R_Free(e1); R_Free(safe_reject); R_Free(eta); R_Free(haz); R_Free(rsk);
   return List::create(beta, center, scale, lambda, Dev, iter, n_reject, Rcpp::wrap(col_idx));
 }

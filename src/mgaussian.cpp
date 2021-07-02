@@ -10,8 +10,8 @@ void standardize_and_get_residual(NumericVector &center, NumericVector &scale,
                                   double alpha, int n, int p, int m) {
   MatrixAccessor<double> xAcc(*xMat);
   double *xCol;
-  double *sum_xy = Calloc(m, double);
-  double *sum_y = Calloc(m, double);
+  double *sum_xy = R_Calloc(m, double);
+  double *sum_y = R_Calloc(m, double);
   double zmax = 0.0, zj = 0.0;
   int i, j, k;
   
@@ -55,7 +55,7 @@ void standardize_and_get_residual(NumericVector &center, NumericVector &scale,
   }
   *p_keep_ptr = col_idx.size();
   *lambda_max_ptr = zmax / alpha;
-  Free(sum_xy); Free(sum_y);
+  R_Free(sum_xy); R_Free(sum_y);
 }
 
 // standardize for multiresponse and store XtY
@@ -68,8 +68,8 @@ void standardize_and_get_residual(NumericVector &center, NumericVector &scale,
                                   int n, int p, int m) {
   MatrixAccessor<double> xAcc(*xMat);
   double *xCol;
-  double *sum_xy = Calloc(m, double);
-  double *sum_y = Calloc(m, double);
+  double *sum_xy = R_Calloc(m, double);
+  double *sum_y = R_Calloc(m, double);
   double zmax = 0.0, zj = 0.0;
   int i, j, k;
   
@@ -114,7 +114,7 @@ void standardize_and_get_residual(NumericVector &center, NumericVector &scale,
   }
   *p_keep_ptr = col_idx.size();
   *lambda_max_ptr = zmax / alpha;
-  Free(sum_xy); Free(sum_y);
+  R_Free(sum_xy); R_Free(sum_y);
 }
 
 // Crossproduct xjTR
@@ -175,7 +175,7 @@ void bedpp_init(XPtr<BigMatrix> xMat, double *R, double *sumResid, vector<double
                 int n, int p, int m) {
   double xjtx; // xjtx_max
   // compute x_maxtY
-  double *xTR = Calloc(m, double);
+  double *xTR = R_Calloc(m, double);
   int j, jj, k;
   crossprod_resid(xTR, xMat, R, sumResid, row_idx,
                   center[xmax_idx], scale[xmax_idx], n, m, xmax_idx);
@@ -191,7 +191,7 @@ void bedpp_init(XPtr<BigMatrix> xMat, double *R, double *sumResid, vector<double
     }
     lhs3[j] *= xjtx / n;
   }
-  Free(xTR);
+  R_Free(xTR);
 }
 
 // apply EDPP 
@@ -226,7 +226,7 @@ void edpp_update(XPtr<BigMatrix> xpMat, double *R, double *sumResid,
   for(j = 0; j < p; j++){
     jj = col_idx[j];
     xCol = xAcc[jj];
-    xTR = Calloc(m, double);
+    xTR = R_Calloc(m, double);
     for(k = 0; k < m; k++) xTR[k] = 0;
     sum2 = 0.0;
     sum3 = 0.0;
@@ -241,7 +241,7 @@ void edpp_update(XPtr<BigMatrix> xpMat, double *R, double *sumResid,
     } 
     lhs2[j] = sum2;
     lhs3[j] = sum3;
-    Free(xTR);
+    R_Free(xTR);
   }
 }
 
@@ -262,7 +262,7 @@ int check_strong_set(int *e1, int *e2, vector<double> &z, XPtr<BigMatrix> xpMat,
       xCol = xAcc[jj];
       z[j] = 0.0;
       sum = 0.0;
-      xTR = Calloc(m, double);
+      xTR = R_Calloc(m, double);
       for(k=0; k < m; k++) xTR[k] = 0.0;
       for (i=0; i < n; i++) {
         for (k=0; k < m; k++) {
@@ -281,7 +281,7 @@ int check_strong_set(int *e1, int *e2, vector<double> &z, XPtr<BigMatrix> xpMat,
         e1[j] = 1;
         violations++;
       }
-      Free(xTR);
+      R_Free(xTR);
     }
   }
   return violations;
@@ -303,7 +303,7 @@ int check_rest_set(int *e1, int *e2, vector<double> &z, XPtr<BigMatrix> xpMat,
       xCol = xAcc[jj];
       z[j] = 0.0;
       sum = 0.0;
-      xTR = Calloc(m, double);
+      xTR = R_Calloc(m, double);
       for(k=0; k < m; k++) xTR[k] = 0.0;
       for (i=0; i < n; i++) {
         for (k=0; k < m; k++) {
@@ -322,7 +322,7 @@ int check_rest_set(int *e1, int *e2, vector<double> &z, XPtr<BigMatrix> xpMat,
         e1[j] = e2[j] = 1;
         violations++;
       }
-      Free(xTR);
+      R_Free(xTR);
     }
   }
   return violations;
@@ -345,7 +345,7 @@ int check_rest_safe_set(int *e1, int *e2, int *discard_beta, vector<double> &z,
       xCol = xAcc[jj];
       z[j] = 0.0;
       sum = 0.0;
-      xTR = Calloc(m, double);
+      xTR = R_Calloc(m, double);
       for(k=0; k < m; k++) xTR[k] = 0.0;
       for (i=0; i < n; i++) {
         for (k=0; k < m; k++) {
@@ -364,7 +364,7 @@ int check_rest_safe_set(int *e1, int *e2, int *discard_beta, vector<double> &z,
         e1[j] = e2[j] = 1;
         violations++;
       }
-      Free(xTR);
+      R_Free(xTR);
     }
   }
   return violations;
@@ -451,20 +451,20 @@ RcppExport SEXP cdfit_mgaussian_ada(SEXP X_, SEXP y_, SEXP row_idx_,
   arma::field<arma::sp_mat> beta(m);
   beta.for_each( [&](arma::sp_mat& beta_class) { beta_class.set_size(p, L); } );
   //arma::sp_mat beta = arma::sp_mat(m*p, L); // beta
-  double *a = Calloc(m*p, double); //Beta from previous iteration
+  double *a = R_Calloc(m*p, double); //Beta from previous iteration
   NumericVector loss(L);
   IntegerVector iter(L);
   IntegerVector n_reject(L);
   
   double l1, l2, cutoff, cutoff0;
-  double* shift = Calloc(m, double);
+  double* shift = R_Calloc(m, double);
   double max_update, update, thresh; // for convergence check
   int i, j, k, jj, l, violations, lstart;
   
-  int *e1 = Calloc(p, int); // ever active set
-  int *e2 = Calloc(p, int); // strong set
-  double *R = Calloc(m*n, double); // residual matrix
-  double *sumResid = Calloc(m, double);
+  int *e1 = R_Calloc(p, int); // ever active set
+  int *e2 = R_Calloc(p, int); // strong set
+  double *R = R_Calloc(m*n, double); // residual matrix
+  double *sumResid = R_Calloc(m, double);
   loss[0] = 0.0;
   for(k = 0; k < m; k++) sumResid[k] = 0.0;
   for(i = 0; i < n; i++) {
@@ -474,15 +474,15 @@ RcppExport SEXP cdfit_mgaussian_ada(SEXP X_, SEXP y_, SEXP row_idx_,
       loss[0] += pow(Y.at(k, i), 2);
     } 
   }
-  double *xTR = Calloc(m, double);
+  double *xTR = R_Calloc(m, double);
   thresh = eps * loss[0] / n;
   
   // EDPP
-  int *discard_beta = Calloc(p, int); // index set of discarded features;
+  int *discard_beta = R_Calloc(p, int); // index set of discarded features;
   double c, d;
-  double *lhs1 = Calloc(p, double); // 1st term on LHS, ||XTY||_2
-  double *lhs2 = Calloc(p, double); // 2nd term on LHS, ||XTR||_2 if EDPP
-  double *lhs3 = Calloc(p, double); // 3rd term on LHS, <XTY,XTR> if EDPP
+  double *lhs1 = R_Calloc(p, double); // 1st term on LHS, ||XTY||_2
+  double *lhs2 = R_Calloc(p, double); // 2nd term on LHS, ||XTR||_2 if EDPP
+  double *lhs3 = R_Calloc(p, double); // 3rd term on LHS, <XTY,XTR> if EDPP
   double rhs2 = 0.0; // second term on RHS
   double yhat;
   double Yhat_norm2 = 0.0;
@@ -538,8 +538,8 @@ RcppExport SEXP cdfit_mgaussian_ada(SEXP X_, SEXP y_, SEXP row_idx_,
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(a); Free(e1); Free(e2); Free(xTR); Free(shift); Free(R); Free(sumResid);
-        Free(discard_beta); Free(lhs1); Free(lhs2); Free(lhs3);
+        R_Free(a); R_Free(e1); R_Free(e2); R_Free(xTR); R_Free(shift); R_Free(R); R_Free(sumResid);
+        R_Free(discard_beta); R_Free(lhs1); R_Free(lhs2); R_Free(lhs3);
         return List::create(beta, center, scale, lambda, loss, iter, 
                             n_reject, n_safe_reject, Rcpp::wrap(col_idx));
       }
@@ -708,8 +708,8 @@ RcppExport SEXP cdfit_mgaussian_ada(SEXP X_, SEXP y_, SEXP row_idx_,
     }
   }
   
-  Free(a); Free(e1); Free(e2); Free(xTR); Free(shift); Free(R); Free(sumResid);
-  Free(discard_beta); Free(lhs1); Free(lhs2); Free(lhs3);
+  R_Free(a); R_Free(e1); R_Free(e2); R_Free(xTR); R_Free(shift); R_Free(R); R_Free(sumResid);
+  R_Free(discard_beta); R_Free(lhs1); R_Free(lhs2); R_Free(lhs3);
   //ProfilerStop();
   return List::create(beta, center, scale, lambda, loss, iter,
                       n_reject, n_safe_reject, Rcpp::wrap(col_idx));
@@ -790,20 +790,20 @@ RcppExport SEXP cdfit_mgaussian_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
   arma::field<arma::sp_mat> beta(m);
   beta.for_each( [&](arma::sp_mat& beta_class) { beta_class.set_size(p, L); } );
   //arma::sp_mat beta = arma::sp_mat(m*p, L); // beta
-  double *a = Calloc(m*p, double); //Beta from previous iteration
+  double *a = R_Calloc(m*p, double); //Beta from previous iteration
   NumericVector loss(L);
   IntegerVector iter(L);
   IntegerVector n_reject(L);
   
   double l1, l2, cutoff;
-  double* shift = Calloc(m, double);
+  double* shift = R_Calloc(m, double);
   double max_update, update, thresh; // for convergence check
   int i, j, k, jj, l, violations, lstart;
   
-  int *e1 = Calloc(p, int); // ever active set
-  int *e2 = Calloc(p, int); // strong set
-  double *R = Calloc(m*n, double); // residual matrix
-  double *sumResid = Calloc(m, double);
+  int *e1 = R_Calloc(p, int); // ever active set
+  int *e2 = R_Calloc(p, int); // strong set
+  double *R = R_Calloc(m*n, double); // residual matrix
+  double *sumResid = R_Calloc(m, double);
   loss[0] = 0;
   for(k = 0; k < m; k++) sumResid[k] = 0;
   for(i = 0; i < n; i++) {
@@ -813,7 +813,7 @@ RcppExport SEXP cdfit_mgaussian_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
       loss[0] += pow(Y.at(k, i), 2);
     } 
   }
-  double *xTR = Calloc(m, double);
+  double *xTR = R_Calloc(m, double);
   thresh = eps * loss[0] / n;
   
   // set up lambda
@@ -856,7 +856,7 @@ RcppExport SEXP cdfit_mgaussian_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
       }
       if (nv > dfmax) {
         for (int ll=l; ll<L; ll++) iter[ll] = NA_INTEGER;
-        Free(a); Free(e1); Free(e2); Free(xTR); Free(shift); Free(R); Free(sumResid);
+        R_Free(a); R_Free(e1); R_Free(e2); R_Free(xTR); R_Free(shift); R_Free(R); R_Free(sumResid);
         return List::create(beta, center, scale, lambda, loss, iter, n_reject, Rcpp::wrap(col_idx));
       }
       // strong set
@@ -940,7 +940,7 @@ RcppExport SEXP cdfit_mgaussian_ssr(SEXP X_, SEXP y_, SEXP row_idx_,
     }
   }
   
-  Free(a); Free(e1); Free(e2); Free(xTR); Free(shift); Free(R); Free(sumResid);
+  R_Free(a); R_Free(e1); R_Free(e2); R_Free(xTR); R_Free(shift); R_Free(R); R_Free(sumResid);
   //ProfilerStop();
   return List::create(beta, center, scale, lambda, loss, iter, n_reject, Rcpp::wrap(col_idx));
 }
